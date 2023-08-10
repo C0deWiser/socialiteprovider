@@ -3,6 +3,7 @@
 namespace SocialiteProviders\Zenit;
 
 use Illuminate\Support\Arr;
+use Laravel\Socialite\Two\InvalidStateException;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
 
@@ -48,6 +49,36 @@ class Provider extends AbstractProvider
             $this->buildPath('auth'),
             $state
         );
+    }
+
+    public function user()
+    {
+        if ($this->user) {
+            return $this->user;
+        }
+
+        if ($this->hasInvalidState()) {
+            throw new InvalidStateException;
+        }
+
+        if ($this->request->has('error')) {
+
+            $error = $this->request->get('error');
+            $error_description = $this->request->get('error_description') ?? $error;
+
+            throw new CallbackException($error_description, $error);
+        }
+
+        $response = $this->getAccessTokenResponse($this->getCode());
+
+        $this->user = $this->mapUserToObject($this->getUserByToken(
+            $token = Arr::get($response, 'access_token')
+        ));
+
+        return $this->user->setToken($token)
+            ->setRefreshToken(Arr::get($response, 'refresh_token'))
+            ->setExpiresIn(Arr::get($response, 'expires_in'))
+            ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($response, 'scope', '')));
     }
 
     /**
