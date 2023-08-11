@@ -2,6 +2,7 @@
 
 namespace SocialiteProviders\Zenit;
 
+use GuzzleHttp\Exception\ClientException;
 use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\InvalidStateException;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
@@ -67,9 +68,17 @@ class Provider extends AbstractProvider
 
         $this->examineCallbackResponse();
 
-        $response = $this->getAccessTokenResponse($this->getCode());
-
-        $this->examineTokenResponse($response);
+        try {
+            $response = $this->getAccessTokenResponse($this->getCode());
+            $this->examineTokenResponse($response);
+        } catch (ClientException $e) {
+            $response = json_decode($e->getResponse()->getBody()->getContents(), true);
+            if (is_array($response)) {
+                $this->examineTokenResponse($response, $e->getResponse()->getStatusCode());
+            }
+            // As a fallback
+            throw $e;
+        }
 
         $this->user = $this->mapUserToObject($this->getUserByToken(
             $token = Arr::get($response, 'access_token')
@@ -98,13 +107,14 @@ class Provider extends AbstractProvider
     /**
      * @throws OAuth2TokenException
      */
-    protected function examineTokenResponse(array $response)
+    protected function examineTokenResponse(array $response, int $status = 0)
     {
         if (isset($response['error'])) {
             throw new OAuth2TokenException(
                 $response['error'],
                 $response['error_description'] ?? '',
-                $response['error_uri'] ?? ''
+                $response['error_uri'] ?? '',
+                $status
             );
         }
     }
