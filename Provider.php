@@ -51,6 +51,10 @@ class Provider extends AbstractProvider
         );
     }
 
+    /**
+     * {@inheritdoc}
+     * @throws OAuth2Exception
+     */
     public function user()
     {
         if ($this->user) {
@@ -61,15 +65,11 @@ class Provider extends AbstractProvider
             throw new InvalidStateException;
         }
 
-        if ($this->request->has('error')) {
-
-            $error = $this->request->get('error');
-            $error_description = $this->request->get('error_description') ?? $error;
-
-            throw new CallbackException($error_description, $error);
-        }
+        $this->examineCallbackResponse();
 
         $response = $this->getAccessTokenResponse($this->getCode());
+
+        $this->examineTokenResponse($response);
 
         $this->user = $this->mapUserToObject($this->getUserByToken(
             $token = Arr::get($response, 'access_token')
@@ -79,6 +79,34 @@ class Provider extends AbstractProvider
             ->setRefreshToken(Arr::get($response, 'refresh_token'))
             ->setExpiresIn(Arr::get($response, 'expires_in'))
             ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($response, 'scope', '')));
+    }
+
+    /**
+     * @throws OAuth2CallbackException
+     */
+    protected function examineCallbackResponse()
+    {
+        if ($this->request->has('error')) {
+            throw new OAuth2CallbackException(
+                $this->request->get('error'),
+                $this->request->get('error_description', ''),
+                $this->request->get('error_uri', '')
+            );
+        }
+    }
+
+    /**
+     * @throws OAuth2TokenException
+     */
+    protected function examineTokenResponse(array $response)
+    {
+        if (isset($response['error'])) {
+            throw new OAuth2TokenException(
+                $response['error'],
+                $response['error_description'] ?? '',
+                $response['error_uri'] ?? ''
+            );
+        }
     }
 
     /**
