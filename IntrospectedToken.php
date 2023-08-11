@@ -3,9 +3,10 @@
 namespace SocialiteProviders\Zenit;
 
 use ArrayAccess;
+use Illuminate\Contracts\Support\Arrayable;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 
-class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface
+class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arrayable
 {
     /**
      * Introspection raw attributes.
@@ -97,5 +98,10 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface
     public function offsetUnset($offset)
     {
         unset($this->introspected[$offset]);
+    }
+
+    public function toArray(): array
+    {
+        return $this->introspected;
     }
 }

@@ -50,3 +50,54 @@ return Socialite::driver('zenit')->redirect();
 - ``email``
 - ``avatar``
 
+### Error Response
+
+Package provides response error handling compliant to rfc6749.
+
+```php
+
+try {
+
+    $user = Socialite::driver('zenit')->user();
+
+} catch (OAuth2Exception $e) {
+
+    return match ($e->getError()) {
+
+        // Show response to the user
+        'access_denied',
+        'server_error',
+        'temporarily_unavailable' =>
+
+            redirect()
+                ->to(route('login'))
+                ->with('error', $e->getMessage()),
+
+        // Silently
+        'interaction_required' => redirect()->to('/'),
+
+        // Unrecoverable
+        default => throw $e,
+    };
+}
+```
+
+### Token Introspection
+
+Package provides token introspection compliant to rfc7662.
+
+```php
+use \Illuminate\Http\Request;
+use \SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
+
+public function api(Request $request) {
+    
+    /** @var IntrospectedTokenInterface $token */
+    $token = Socialite::driver('zenit')
+        ->introspectToken($request->bearerToken());
+    
+    if ($token->isActive()) {
+        //  
+    }
+}
+```
