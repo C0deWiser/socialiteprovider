@@ -10,14 +10,6 @@ namespace SocialiteProviders\Zenit;
  */
 class OAuth2CallbackException extends OAuth2Exception
 {
-    const access_denied = 'access_denied';
-    const invalid_request = 'invalid_request';
-    const invalid_scope = 'invalid_scope';
-    const server_error = 'server_error';
-    const temporarily_unavailable = 'temporarily_unavailable';
-    const unauthorized_client = 'unauthorized_client';
-    const unsupported_response_type = 'unsupported_response_type';
-
     protected function fallbackErrorDescription(string $error): string
     {
         switch ($error) {

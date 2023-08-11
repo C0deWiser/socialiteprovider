@@ -9,13 +9,6 @@ namespace SocialiteProviders\Zenit;
  */
 class OAuth2TokenException extends OAuth2Exception
 {
-    const invalid_client = 'invalid_client';
-    const invalid_grant = 'invalid_grant';
-    const invalid_request = 'invalid_request';
-    const invalid_scope = 'invalid_scope';
-    const unauthorized_client = 'unauthorized_client';
-    const unsupported_grant_type = 'unsupported_grant_type';
-
     protected function fallbackErrorDescription(string $error): string
     {
         switch ($error) {

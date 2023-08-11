@@ -4,6 +4,17 @@ namespace SocialiteProviders\Zenit;
 
 abstract class OAuth2Exception extends \Exception
 {
+    const access_denied = 'access_denied';
+    const invalid_client = 'invalid_client';
+    const invalid_grant = 'invalid_grant';
+    const invalid_request = 'invalid_request';
+    const invalid_scope = 'invalid_scope';
+    const server_error = 'server_error';
+    const temporarily_unavailable = 'temporarily_unavailable';
+    const unauthorized_client = 'unauthorized_client';
+    const unsupported_response_type = 'unsupported_response_type';
+    const unsupported_grant_type = 'unsupported_grant_type';
+
     protected $error;
     protected $error_uri;
 
