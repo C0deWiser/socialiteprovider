@@ -50,6 +50,18 @@ return Socialite::driver('zenit')->redirect();
 - ``email``
 - ``avatar``
 
+### Access Token
+
+Access Token is now an object, not just a string.
+
+```php
+$user = Socialite::driver('zenit')->user();
+
+$token = $user->token;
+
+// \League\OAuth2\Client\Token\AccessToken
+```
+
 ### Error Response
 
 Package provides response error handling compliant to rfc6749.
@@ -100,4 +112,32 @@ public function api(Request $request) {
         //  
     }
 }
+```
+
+### Refreshing Token
+
+```php
+$token = Socialite::driver('zenit')
+            ->grantRefresh($refresh_token);
+```
+
+### Client Token
+
+```php
+$token = Socialite::driver('zenit')
+            ->grantClientCredentials('scope-1 scope-2');
+```
+
+### Token by username and password
+
+```php
+$token = Socialite::driver('zenit')
+            ->grantPassword($username, $password, 'scope-1 scope-2');
+```
+
+### Token by custom grant
+
+```php
+$token = Socialite::driver('zenit')
+            ->grant('custom_grant', [/* any request params */]);
 ```
