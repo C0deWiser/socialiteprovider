@@ -3,15 +3,27 @@
 namespace SocialiteProviders\Zenit;
 
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\RequestOptions;
 use Illuminate\Support\Arr;
 use Laravel\Socialite\Two\InvalidStateException;
+use League\OAuth2\Client\Token\AccessToken;
+use League\OAuth2\Client\Token\AccessTokenInterface;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
 use SocialiteProviders\Manager\OAuth2\User;
+use SocialiteProviders\Zenit\rfc6749\GrantAuthorizationCodeContract;
+use SocialiteProviders\Zenit\rfc6749\GrantClientCredentialsContract;
+use SocialiteProviders\Zenit\rfc6749\GrantPasswordContract;
+use SocialiteProviders\Zenit\rfc6749\GrantRefreshContract;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 use SocialiteProviders\Zenit\rfc7662\TokenIntrospectionInterface;
 
-class Provider extends AbstractProvider implements TokenIntrospectionInterface
+class Provider extends AbstractProvider implements
+    GrantAuthorizationCodeContract,
+    GrantClientCredentialsContract,
+    GrantPasswordContract,
+    GrantRefreshContract,
+    TokenIntrospectionInterface
 {
     /**
      * Unique Provider Identifier.
@@ -97,6 +109,7 @@ class Provider extends AbstractProvider implements TokenIntrospectionInterface
     /**
      * {@inheritdoc}
      * @throws OAuth2Exception
+     * @throws GuzzleException
      */
     public function user()
     {
@@ -110,22 +123,20 @@ class Provider extends AbstractProvider implements TokenIntrospectionInterface
 
         $this->examineCallbackResponse();
 
-        try {
-            $response = $this->getAccessTokenResponse($this->getCode());
-        } catch (ClientException $e) {
-            $this->examineTokenResponse($e);
-        }
+        $token = $this->grantAuthorizationCode($this->getCode(), $this->redirectUrl);
 
-        $this->user = $this->mapUserToObject($this->getUserByToken(
-            $token = Arr::get($response, 'access_token')
-        ));
+        $this->user = $this->mapUserToObject($this->getUserByToken($token));
 
         return $this->user->setToken($token)
-            ->setRefreshToken(Arr::get($response, 'refresh_token'))
-            ->setExpiresIn(Arr::get($response, 'expires_in'))
-            ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($response, 'scope', '')));
+            ->setRefreshToken($token->getRefreshToken())
+            ->setExpiresIn($token->getExpires() - $token->getTimeNow())
+            ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($token->getValues(), 'scope', '')));
     }
 
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
     public function introspectToken(string $token): IntrospectedTokenInterface
     {
         try {
@@ -184,5 +195,84 @@ class Provider extends AbstractProvider implements TokenIntrospectionInterface
         }
 
         throw $e;
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function grant(string $grant_type, array $request): AccessTokenInterface
+    {
+        $request = $request +
+            [
+                'grant_type'    => $grant_type,
+                'client_id'     => $this->clientId,
+                'client_secret' => $this->clientSecret,
+            ];
+
+        try {
+            $response = $this->getHttpClient()->post(
+                $this->getTokenUrl(),
+                [
+                    RequestOptions::HEADERS     => [
+                        'Accept' => 'application/json'
+                    ],
+                    RequestOptions::FORM_PARAMS => $request,
+                ]);
+
+            $response = json_decode($response->getBody()->getContents(), true);
+
+            return new AccessToken($response);
+
+        } catch (ClientException $e) {
+            $this->examineTokenResponse($e);
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function grantClientCredentials(string $scope = ''): AccessTokenInterface
+    {
+        return $this->grant('client_credentials', [
+            'scope' => $scope
+        ]);
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function grantPassword(string $username, string $password, string $scope = ''): AccessTokenInterface
+    {
+        return $this->grant('password', [
+            'username' => $username,
+            'password' => $password,
+            'scope'    => $scope
+        ]);
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function grantRefresh(string $refresh_token): AccessTokenInterface
+    {
+        return $this->grant('refresh_token', [
+            'refresh_token' => $refresh_token,
+        ]);
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function grantAuthorizationCode(string $code, string $redirect_uri): AccessToken
+    {
+        return $this->grant('authorization_code', [
+            'code' => $code,
+            'redirect_uri' => $redirect_uri
+        ]);
     }
 }
