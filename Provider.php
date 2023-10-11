@@ -108,29 +108,39 @@ class Provider extends AbstractProvider implements
 
     /**
      * {@inheritdoc}
+     *
+     * @param string|AccessToken $token Build user using given token.
      * @throws OAuth2Exception
      * @throws GuzzleException
      */
-    public function user()
+    public function user($token = null)
     {
         if ($this->user) {
             return $this->user;
         }
 
-        if ($this->hasInvalidState()) {
-            throw new InvalidStateException;
+        if (!$token) {
+            if ($this->hasInvalidState()) {
+                throw new InvalidStateException;
+            }
+
+            $this->examineCallbackResponse();
+
+            $token = $this->grantAuthorizationCode($this->getCode(), $this->redirectUrl);
         }
-
-        $this->examineCallbackResponse();
-
-        $token = $this->grantAuthorizationCode($this->getCode(), $this->redirectUrl);
 
         $this->user = $this->mapUserToObject($this->getUserByToken($token));
 
-        return $this->user->setToken($token)
-            ->setRefreshToken($token->getRefreshToken())
-            ->setExpiresIn($token->getExpires() - $token->getTimeNow())
-            ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($token->getValues(), 'scope', '')));
+        $this->user->setToken($token);
+
+        if ($token instanceof AccessToken) {
+            $this->user
+                ->setRefreshToken($token->getRefreshToken())
+                ->setExpiresIn($token->getExpires() - $token->getTimeNow())
+                ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($token->getValues(), 'scope', '')));
+        }
+
+        return $this->user;
     }
 
     /**

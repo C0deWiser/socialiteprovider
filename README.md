@@ -106,7 +106,7 @@ public function api(Request $request) {
     
     /** @var IntrospectedTokenInterface $token */
     $token = Socialite::driver('zenit')
-        ->introspectToken($request->bearerToken());
+                ->introspectToken($request->bearerToken());
     
     if ($token->isActive()) {
         //  
