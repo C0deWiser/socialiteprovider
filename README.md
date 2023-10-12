@@ -114,6 +114,13 @@ public function api(Request $request) {
 }
 ```
 
+### Get user using existing token
+
+```php
+$user = Socialite::driver('zenit')
+            ->user($request->bearerToken());
+```
+
 ### Refreshing Token
 
 ```php

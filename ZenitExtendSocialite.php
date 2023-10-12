@@ -13,6 +13,6 @@ class ZenitExtendSocialite
      */
     public function handle(SocialiteWasCalled $socialiteWasCalled)
     {
-        $socialiteWasCalled->extendSocialite('zenit', Provider::class);
+        $socialiteWasCalled->extendSocialite('zenit', ZenitProvider::class);
     }
 }
