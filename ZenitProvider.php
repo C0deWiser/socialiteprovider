@@ -42,7 +42,7 @@ class ZenitProvider extends AbstractProvider implements
 
     protected function buildPath(string $path): string
     {
-        return $this->getBaseUri() . '/' . ltrim($path, '/');
+        return $this->getBaseUri().'/'.ltrim($path, '/');
     }
 
     /**
@@ -74,7 +74,7 @@ class ZenitProvider extends AbstractProvider implements
             [
                 RequestOptions::HEADERS => [
                     'Accept'        => 'application/json',
-                    'Authorization' => 'Bearer ' . $token,
+                    'Authorization' => 'Bearer '.$token,
                 ],
             ]
         );
@@ -90,7 +90,7 @@ class ZenitProvider extends AbstractProvider implements
         return (new User())->setRaw($user)->map([
             'id'       => Arr::get($user, 'data.id'),
             'nickname' => Arr::get($user, 'data.email'),
-            'name'     => trim(Arr::get($user, 'data.first_name') . ' ' . Arr::get($user, 'data.family_name')),
+            'name'     => trim(Arr::get($user, 'data.first_name').' '.Arr::get($user, 'data.family_name')),
             'email'    => Arr::get($user, 'data.email'),
             'avatar'   => Arr::get($user, 'data.picture'),
         ]);
@@ -109,38 +109,47 @@ class ZenitProvider extends AbstractProvider implements
     /**
      * {@inheritdoc}
      *
-     * @param string|AccessToken $token Build user using given token.
      * @throws OAuth2Exception
      * @throws GuzzleException
      */
-    public function user($token = null)
+    public function user()
     {
         if ($this->user) {
             return $this->user;
         }
 
-        if (!$token) {
-            if ($this->hasInvalidState()) {
-                throw new InvalidStateException;
-            }
-
-            $this->examineCallbackResponse();
-
-            $token = $this->grantAuthorizationCode($this->getCode(), $this->redirectUrl);
+        if ($this->hasInvalidState()) {
+            throw new InvalidStateException;
         }
 
-        $this->user = $this->mapUserToObject($this->getUserByToken($token));
+        $this->examineCallbackResponse();
 
-        $this->user->setToken($token);
+        $token = $this->grantAuthorizationCode($this->getCode(), $this->redirectUrl);
+
+        $this->user = $this->userFromToken($token);
+
+        return $this->user;
+    }
+
+    /**
+     * @param  string|AccessToken  $token
+     *
+     * @return \Laravel\Socialite\Two\User|User
+     */
+    public function userFromToken($token)
+    {
+        $user = $this->mapUserToObject($this->getUserByToken($token));
+
+        $user->setToken($token);
 
         if ($token instanceof AccessToken) {
-            $this->user
+            $user
                 ->setRefreshToken($token->getRefreshToken())
                 ->setExpiresIn($token->getExpires() - $token->getTimeNow())
                 ->setApprovedScopes(explode($this->scopeSeparator, Arr::get($token->getValues(), 'scope', '')));
         }
 
-        return $this->user;
+        return $user;
     }
 
     /**
@@ -281,7 +290,7 @@ class ZenitProvider extends AbstractProvider implements
     public function grantAuthorizationCode(string $code, string $redirect_uri): AccessToken
     {
         return $this->grant('authorization_code', [
-            'code' => $code,
+            'code'         => $code,
             'redirect_uri' => $redirect_uri
         ]);
     }
