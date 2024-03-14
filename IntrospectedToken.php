@@ -22,7 +22,7 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arra
 
     public function isActive(): bool
     {
-        return (bool)$this->introspected['active'];
+        return (bool) $this->introspected['active'];
     }
 
     public function scope(): ?string
@@ -47,17 +47,17 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arra
 
     public function exp(): ?int
     {
-        return (int)$this->introspected['exp'] ?? null;
+        return isset($this->introspected['exp']) ? (int) $this->introspected['exp'] : null;
     }
 
     public function iat(): ?int
     {
-        return (int)$this->introspected['iat'] ?? null;
+        return isset($this->introspected['iat']) ? (int) $this->introspected['iat'] : null;
     }
 
     public function nbf(): ?int
     {
-        return (int)$this->introspected['int'] ?? null;
+        return isset($this->introspected['int']) ? (int) $this->introspected['int'] : null;
     }
 
     public function sub(): ?string
