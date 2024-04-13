@@ -155,16 +155,12 @@ Register auth driver,
 that authorizes incoming requests with bearer tokens,
 issued by some OAuth 2.0 server.
 
-`TokenAuthorization` class requires first argument 
-to be `TokenIntrospectionInterface`. Second argument is recommended.
-
 ```php
 use SocialiteProviders\Zenit\Auth\TokenAuthorization;
 use Laravel\Socialite\Facades\Socialite;
 
 Auth::viaRequest('access_token', new TokenAuthorization(
-    Socialite::driver('zenit'),
-    cache()->driver()
+    socialiteProvider: 'zenit', cache: cache()->driver()
 ));
 ```
 

@@ -4,19 +4,20 @@ namespace SocialiteProviders\Zenit\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Http\Request;
+use Laravel\Socialite\Facades\Socialite;
 use Psr\SimpleCache\CacheInterface;
 use SocialiteProviders\Zenit\IntrospectedToken;
 use SocialiteProviders\Zenit\rfc7662\TokenIntrospectionInterface;
 
 class TokenAuthorization
 {
-    protected TokenIntrospectionInterface $provider;
+    protected string $providerName;
     protected ?CacheInterface $cache;
 
-    public function __construct(TokenIntrospectionInterface $provider, ?CacheInterface $cache = null)
+    public function __construct(string $socialiteProvider, ?CacheInterface $cache = null)
     {
         $this->cache = $cache;
-        $this->provider = $provider;
+        $this->providerName = $socialiteProvider;
     }
 
     public function __invoke(Request $request): ?Authenticatable
@@ -47,7 +48,9 @@ class TokenAuthorization
         $resolved = $this->cache ? $this->cache->get($token) : null;
 
         if (!$resolved) {
-            $resolved = $this->provider->introspectToken($token);
+            $provider = Socialite::driver($this->providerName);
+
+            $resolved = $provider->introspectToken($token);
 
             $expires_at = $resolved->expiresAt();
 
