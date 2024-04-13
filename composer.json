@@ -9,14 +9,14 @@
         }
     ],
     "require": {
-        "php": "^7.2 || ^8.0",
+        "php": "^7.4 || ^8.0",
         "ext-json": "*",
         "socialiteproviders/manager": "~4.0",
         "league/oauth2-client": "^2.7"
     },
     "autoload": {
         "psr-4": {
-            "SocialiteProviders\\Zenit\\": ""
+            "SocialiteProviders\\Zenit\\": "src/"
         }
     }
 }

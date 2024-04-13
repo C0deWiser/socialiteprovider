@@ -2,7 +2,7 @@
 
 namespace SocialiteProviders\Zenit\rfc7662;
 
-use SocialiteProviders\Zenit\OAuth2TokenException;
+use SocialiteProviders\Zenit\Exceptions\OAuth2TokenException;
 
 /**
  * OAuth 2.0 Token Introspection.

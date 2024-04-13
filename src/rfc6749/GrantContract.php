@@ -3,7 +3,7 @@
 namespace SocialiteProviders\Zenit\rfc6749;
 
 use League\OAuth2\Client\Token\AccessTokenInterface;
-use SocialiteProviders\Zenit\OAuth2TokenException;
+use SocialiteProviders\Zenit\Exceptions\OAuth2TokenException;
 
 interface GrantContract
 {

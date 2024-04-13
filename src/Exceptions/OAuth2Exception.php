@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialiteProviders\Zenit;
+namespace SocialiteProviders\Zenit\Exceptions;
 
 abstract class OAuth2Exception extends \Exception
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialiteProviders\Zenit;
+namespace SocialiteProviders\Zenit\Exceptions;
 
 /**
  * Grant Request with Error Response.

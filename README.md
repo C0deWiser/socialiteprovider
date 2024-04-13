@@ -148,3 +148,63 @@ $token = Socialite::driver('zenit')
 $token = Socialite::driver('zenit')
             ->grant('custom_grant', [/* any request params */]);
 ```
+
+## Token authorization
+
+Register auth driver, 
+that authorizes incoming requests with bearer tokens,
+issued by some OAuth 2.0 server.
+
+`TokenAuthorization` class requires first argument 
+to be `TokenIntrospectionInterface`. Second argument is recommended.
+
+```php
+use SocialiteProviders\Zenit\Auth\TokenAuthorization;
+use Laravel\Socialite\Facades\Socialite;
+
+Auth::viaRequest('access_token', new TokenAuthorization(
+    Socialite::driver('zenit'),
+    cache()->driver()
+));
+```
+
+Next, register driver for the guard:
+
+```php
+'guards' => [
+    'web' => [
+        'driver' => 'session',
+        'provider' => 'users',
+    ],
+    'api' => [
+        'driver' => 'access_token'
+    ]
+]
+```
+
+As access_token may not be associated with a user, the `Authenticatable`
+object is a `Bearer` class. It exists only during request.
+
+```php
+use Illuminate\Http\Request;
+use SocialiteProviders\Zenit\Auth\Bearer;
+
+public function index(Request $request) {
+    $authenticated = $request->user();
+    
+    if ($authenticated instanceof Bearer) {
+        // Check scope
+        $authenticated->getIntrospectedToken()->scope();
+    }
+}
+```
+
+Other hand, you may use the `ScopedToken` middleware to inspect token scopes:
+
+```php
+use Illuminate\Support\Facades\Route;
+use SocialiteProviders\Zenit\Middlewares\ScopedToken;
+
+Route::get('example', 'ctl')
+    ->middleware([ScopedToken::class.':my-scope,foo,bar'])
+```

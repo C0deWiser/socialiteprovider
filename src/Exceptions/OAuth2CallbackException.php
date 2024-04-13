@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialiteProviders\Zenit;
+namespace SocialiteProviders\Zenit\Exceptions;
 
 /**
  * Authorization Request with Error Response.

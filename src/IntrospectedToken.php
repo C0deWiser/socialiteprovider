@@ -10,10 +10,8 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arra
 {
     /**
      * Introspection raw attributes.
-     *
-     * @var array
      */
-    public $introspected;
+    public array $introspected;
 
     public function __construct(array $introspected)
     {
@@ -50,14 +48,41 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arra
         return isset($this->introspected['exp']) ? (int) $this->introspected['exp'] : null;
     }
 
+    public function expiresAt(): ?\DateTimeInterface
+    {
+        if ($timestamp = $this->exp()) {
+            return (new \DateTime)->setTimestamp($timestamp);
+        }
+
+        return null;
+    }
+
     public function iat(): ?int
     {
         return isset($this->introspected['iat']) ? (int) $this->introspected['iat'] : null;
     }
 
+    public function issuedAt(): ?\DateTimeInterface
+    {
+        if ($timestamp = $this->iat()) {
+            return (new \DateTime)->setTimestamp($timestamp);
+        }
+
+        return null;
+    }
+
     public function nbf(): ?int
     {
         return isset($this->introspected['int']) ? (int) $this->introspected['int'] : null;
+    }
+
+    public function notBefore(): ?\DateTimeInterface
+    {
+        if ($timestamp = $this->nbf()) {
+            return (new \DateTime)->setTimestamp($timestamp);
+        }
+
+        return null;
     }
 
     public function sub(): ?string
