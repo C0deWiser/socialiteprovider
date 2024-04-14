@@ -4,7 +4,7 @@ namespace SocialiteProviders\Zenit\Middlewares;
 
 use Closure;
 use Illuminate\Http\Request;
-use SocialiteProviders\Zenit\IntrospectedToken;
+use SocialiteProviders\Zenit\Auth\Bearer;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
@@ -19,8 +19,8 @@ class ScopedToken
     {
         $user = $request->user();
 
-        if ($user instanceof IntrospectedToken) {
-            $bearerScopes = explode(' ', $user->scope());
+        if ($user instanceof Bearer) {
+            $bearerScopes = explode(' ', $user->getIntrospectedToken()->scope());
 
             if (array_intersect($scopes, $bearerScopes)) {
                 return $next($request);
