@@ -18,5 +18,9 @@
         "psr-4": {
             "SocialiteProviders\\Zenit\\": "src/"
         }
+    },
+    "require-dev": {
+        "laravel/framework": "^10.34",
+        "laravel/sanctum": "^3.3"
     }
 }

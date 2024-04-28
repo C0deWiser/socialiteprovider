@@ -3,10 +3,11 @@
 namespace SocialiteProviders\Zenit\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
+use Laravel\Sanctum\Contracts\HasAbilities;
 use SocialiteProviders\Zenit\IntrospectedToken;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 
-class Bearer implements Authenticatable
+class Bearer implements Authenticatable, HasAbilities
 {
     protected IntrospectedTokenInterface $token;
 
@@ -53,5 +54,15 @@ class Bearer implements Authenticatable
     public function getRememberTokenName(): string
     {
         return '';
+    }
+
+    public function can($ability): bool
+    {
+        return in_array($ability, explode(' ', $this->token->scope()));
+    }
+
+    public function cant($ability): bool
+    {
+        return !$this->can($ability);
     }
 }

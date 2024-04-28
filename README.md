@@ -155,6 +155,8 @@ Register auth driver,
 that authorizes incoming requests with bearer tokens,
 issued by some OAuth 2.0 server.
 
+Socialite provider should implement `TokenIntrospectionInterface`.
+
 ```php
 use SocialiteProviders\Zenit\Auth\TokenAuthorization;
 use Laravel\Socialite\Facades\Socialite;
