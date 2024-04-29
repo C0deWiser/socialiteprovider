@@ -129,4 +129,14 @@ class IntrospectedToken implements ArrayAccess, IntrospectedTokenInterface, Arra
     {
         return $this->introspected;
     }
+
+    public function can($ability): bool
+    {
+        return in_array($ability, explode(' ', $this->scope() ?? ''));
+    }
+
+    public function cant($ability): bool
+    {
+        return !$this->can($ability);
+    }
 }

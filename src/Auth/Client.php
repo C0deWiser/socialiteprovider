@@ -4,21 +4,17 @@ namespace SocialiteProviders\Zenit\Auth;
 
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Sanctum\Contracts\HasAbilities;
+use Laravel\Sanctum\Contracts\HasApiTokens;
 use SocialiteProviders\Zenit\IntrospectedToken;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 
-class Bearer implements Authenticatable, HasAbilities
+class Client implements Authenticatable, HasApiTokens
 {
-    protected IntrospectedTokenInterface $token;
+    protected HasAbilities $token;
 
     public function __construct(IntrospectedTokenInterface $token)
     {
         $this->token = $token;
-    }
-
-    public function getIntrospectedToken(): IntrospectedTokenInterface
-    {
-        return $this->token;
     }
 
     public function getAuthIdentifierName(): string
@@ -56,13 +52,28 @@ class Bearer implements Authenticatable, HasAbilities
         return '';
     }
 
-    public function can($ability): bool
+    public function tokens()
     {
-        return in_array($ability, explode(' ', $this->token->scope()));
+        return [];
     }
 
-    public function cant($ability): bool
+    public function tokenCan(string $ability)
     {
-        return !$this->can($ability);
+        return $this->token->can($ability);
+    }
+
+    public function createToken(string $name, array $abilities = ['*'])
+    {
+        return null;
+    }
+
+    public function currentAccessToken(): IntrospectedTokenInterface
+    {
+        return $this->token;
+    }
+
+    public function withAccessToken($accessToken)
+    {
+        $this->token = $accessToken;
     }
 }

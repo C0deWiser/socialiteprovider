@@ -24,7 +24,7 @@ class TokenAuthorization
     {
         $resolved = $request->user();
 
-        if ($resolved instanceof Bearer && $resolved->getIntrospectedToken()->isActive()) {
+        if ($resolved instanceof Client && $resolved->getIntrospectedToken()->isActive()) {
             // Test case
             return $resolved;
         }
@@ -36,7 +36,7 @@ class TokenAuthorization
             $resolved = $this->introspect($token);
 
             if ($resolved->isActive()) {
-                return new Bearer($resolved);
+                return new Client($resolved);
             }
         }
 

@@ -2,10 +2,12 @@
 
 namespace SocialiteProviders\Zenit\rfc7662;
 
+use Laravel\Sanctum\Contracts\HasAbilities;
+
 /**
  * Introspection Response.
  */
-interface IntrospectedTokenInterface
+interface IntrospectedTokenInterface extends HasAbilities
 {
     /**
      * Boolean indicator of whether or not the presented token

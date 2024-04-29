@@ -181,18 +181,18 @@ Next, register driver for the guard:
 ```
 
 As access_token may not be associated with a user, the `Authenticatable`
-object is a `Bearer` class. It exists only during request.
+object is a `Client` class. It exists only during request.
 
 ```php
 use Illuminate\Http\Request;
-use SocialiteProviders\Zenit\Auth\Bearer;
+use SocialiteProviders\Zenit\Auth\Client;
 
 public function index(Request $request) {
     $authenticated = $request->user();
     
-    if ($authenticated instanceof Bearer) {
+    if ($authenticated instanceof Client) {
         // Check scope
-        $authenticated->getIntrospectedToken()->scope();
+        $authenticated->currentAccessToken()->scope();
     }
 }
 ```

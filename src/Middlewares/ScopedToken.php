@@ -4,7 +4,7 @@ namespace SocialiteProviders\Zenit\Middlewares;
 
 use Closure;
 use Illuminate\Http\Request;
-use SocialiteProviders\Zenit\Auth\Bearer;
+use Laravel\Sanctum\Contracts\HasApiTokens;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
@@ -19,19 +19,19 @@ class ScopedToken
     {
         $user = $request->user();
 
-        if ($user instanceof Bearer) {
-            $bearerScopes = explode(' ', $user->getIntrospectedToken()->scope());
-
-            if (array_intersect($scopes, $bearerScopes)) {
-                return $next($request);
+        if ($user instanceof HasApiTokens) {
+            foreach ($scopes as $scope) {
+                if ($user->currentAccessToken()->can($scope)) {
+                    return $next($request);
+                }
             }
         }
 
-        $requiredScopes = implode(' ', $scopes);
+        $insufficient_scopes = implode(' ', $scopes);
 
         throw new UnauthorizedHttpException(
-            'Bearer realm="resource", scope="'.$requiredScopes.'", error="insufficient_scope"',
-            "One of scopes required: ".$requiredScopes
+            'Bearer realm="resource", scope="'.$insufficient_scopes.'", error="insufficient_scope"',
+            "One of scopes required: ".$insufficient_scopes
         );
     }
 }
