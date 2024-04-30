@@ -6,7 +6,8 @@ composer require codewiser/socialiteprovider
 
 ## Installation & Basic Usage
 
-Please see the [Base Installation Guide](https://socialiteproviders.com/usage/), then follow the provider specific instructions below.
+Please see the [Base Installation Guide](https://socialiteproviders.com/usage/),
+then follow the provider specific instructions below.
 
 ### Add configuration to `config/services.php`
 
@@ -23,7 +24,9 @@ Please see the [Base Installation Guide](https://socialiteproviders.com/usage/),
 
 Configure the package's listener to listen for `SocialiteWasCalled` events.
 
-Add the event to your `listen[]` array in `app/Providers/EventServiceProvider`. See the [Base Installation Guide](https://socialiteproviders.com/usage/) for detailed instructions.
+Add the event to your `listen[]` array in `app/Providers/EventServiceProvider`.
+See the [Base Installation Guide](https://socialiteproviders.com/usage/) for
+detailed instructions.
 
 ```php
 protected $listen = [
@@ -36,7 +39,8 @@ protected $listen = [
 
 ### Usage
 
-You should now be able to use the provider like you would regularly use Socialite (assuming you have the facade installed):
+You should now be able to use the provider like you would regularly use
+Socialite (assuming you have the facade installed):
 
 ```php
 return Socialite::driver('zenit')->redirect();
@@ -118,14 +122,14 @@ public function api(Request $request) {
 
 ```php
 $user = Socialite::driver('zenit')
-            ->user($request->bearerToken());
+            ->userFromToken($request->bearerToken());
 ```
 
 ### Refreshing Token
 
 ```php
 $token = Socialite::driver('zenit')
-            ->grantRefresh($refresh_token);
+            ->refreshToken($refresh_token);
 ```
 
 ### Client Token
@@ -151,8 +155,7 @@ $token = Socialite::driver('zenit')
 
 ## Token authorization
 
-Register auth driver, 
-that authorizes incoming requests with bearer tokens,
+Register auth driver, that authorizes incoming requests with bearer tokens,
 issued by some OAuth 2.0 server.
 
 Socialite provider should implement `TokenIntrospectionInterface`.
@@ -160,9 +163,12 @@ Socialite provider should implement `TokenIntrospectionInterface`.
 ```php
 use SocialiteProviders\Zenit\Auth\TokenAuthorization;
 use Laravel\Socialite\Facades\Socialite;
+use Illuminate\Support\Facades\Auth;
 
 Auth::viaRequest('access_token', new TokenAuthorization(
-    socialiteProvider: 'zenit', cache: cache()->driver()
+    socialiteProvider: 'zenit', 
+    userProvider: Auth::createUserProvider(config('auth.guards.api.provider')),
+    cache: cache()->driver()
 ));
 ```
 
@@ -175,7 +181,8 @@ Next, register driver for the guard:
         'provider' => 'users',
     ],
     'api' => [
-        'driver' => 'access_token'
+        'driver' => 'access_token',
+        'provider' => 'users',
     ]
 ]
 ```
@@ -185,12 +192,12 @@ object is a `Client` class. It exists only during request.
 
 ```php
 use Illuminate\Http\Request;
-use SocialiteProviders\Zenit\Auth\Client;
+use Laravel\Sanctum\Contracts\HasApiTokens;
 
 public function index(Request $request) {
     $authenticated = $request->user();
     
-    if ($authenticated instanceof Client) {
+    if ($authenticated instanceof HasApiTokens) {
         // Check scope
         $authenticated->currentAccessToken()->scope();
     }

@@ -62,7 +62,7 @@ class Client implements Authenticatable, HasApiTokens
         return $this->token->can($ability);
     }
 
-    public function createToken(string $name, array $abilities = ['*'])
+    public function createToken(string $name, array $abilities = ['*'], \DateTimeInterface $expiresAt = null)
     {
         return null;
     }
