@@ -189,7 +189,7 @@ class ZenitProvider extends AbstractProvider implements
     /**
      * @throws OAuth2CallbackException
      */
-    protected function examineCallbackResponse()
+    public function examineCallbackResponse()
     {
         if ($this->request->has('error')) {
             throw new OAuth2CallbackException(
