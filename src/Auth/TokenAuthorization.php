@@ -9,7 +9,6 @@ use Laravel\Sanctum\Contracts\HasApiTokens;
 use Laravel\Socialite\Facades\Socialite;
 use Psr\SimpleCache\CacheInterface;
 use SocialiteProviders\Zenit\IntrospectedToken;
-use SocialiteProviders\Zenit\rfc7662\TokenIntrospectionInterface;
 
 class TokenAuthorization
 {
@@ -41,7 +40,8 @@ class TokenAuthorization
             $introspected = $this->introspect($token);
 
             if ($introspected->isActive() && $introspected->expiresAt() > now()) {
-                if ($email = $introspected->sub()) {
+                $email = $introspected->sub();
+                if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     // Personal token
                     $authenticated = $this->userProvider->retrieveByCredentials(['email' => $email]);
                 } else {
