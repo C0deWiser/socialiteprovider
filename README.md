@@ -16,7 +16,13 @@ then follow the provider specific instructions below.
   'base_uri' => env('ZENIT_SERVER'),  
   'client_id' => env('ZENIT_CLIENT_ID'),  
   'client_secret' => env('ZENIT_CLIENT_SECRET'),  
-  'redirect' => env('ZENIT_REDIRECT_URI') 
+  'redirect' => env('ZENIT_REDIRECT_URI'),
+  // optional attributes (with default values):
+  'auth_endpoint' => 'auth',
+  'token_endpoint' => 'oauth/token',
+  'user_endpoint' => 'api/user',
+  'token_introspect_endpoint' => 'token_info',
+  'client_manage_endpoint' => 'oauth/client',
 ],
 ```
 
@@ -98,7 +104,7 @@ try {
 }
 ```
 
-### Token Introspection
+## Token Introspection
 
 Package provides token introspection compliant to rfc7662.
 
@@ -118,39 +124,75 @@ public function api(Request $request) {
 }
 ```
 
-### Get user using existing token
+## Get user using existing token
 
 ```php
 $user = Socialite::driver('zenit')
             ->userFromToken($request->bearerToken());
 ```
 
-### Refreshing Token
+## Refreshing Token
 
 ```php
 $token = Socialite::driver('zenit')
             ->refreshToken($refresh_token);
 ```
 
-### Client Token
+## Client Token
 
 ```php
 $token = Socialite::driver('zenit')
             ->grantClientCredentials('scope-1 scope-2');
 ```
 
-### Token by username and password
+## Token by username and password
 
 ```php
 $token = Socialite::driver('zenit')
             ->grantPassword($username, $password, 'scope-1 scope-2');
 ```
 
-### Token by custom grant
+## Token by custom grant
 
 ```php
 $token = Socialite::driver('zenit')
             ->grant('custom_grant', [/* any request params */]);
+```
+
+## Manage client
+
+Package provides token introspection compliant to rfc7592.
+
+```php
+use SocialiteProviders\Zenit\ClientConfiguration;
+
+$config = new ClientConfiguration(
+    Socialite::driver('zenit')->getClientConfiguration()
+);
+```
+
+```php
+use SocialiteProviders\Zenit\ClientConfiguration;
+use SocialiteProviders\Zenit\ClientScope;
+
+$config = new ClientConfiguration();
+
+$config->name = 'name';
+$config->namespace = 'namespace';
+$config->redirect_uri = 'https://example.com';
+
+$scope = new ClientScope();
+
+$scope->name = 'name';
+$scope->description = 'description';
+$scope->aud = ['personal'];
+$scope->realm = 'public';
+
+$config->scopes->add($scope)
+
+// etc
+
+Socialite::driver('zenit')->updateClientConfiguration($config->toUpdateArray());
 ```
 
 ## Token authorization

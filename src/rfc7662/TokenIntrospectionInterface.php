@@ -6,6 +6,8 @@ use SocialiteProviders\Zenit\Exceptions\OAuth2TokenException;
 
 /**
  * OAuth 2.0 Token Introspection.
+ *
+ * @see https://tools.ietf.org/html/rfc7662
  */
 interface TokenIntrospectionInterface
 {

@@ -18,6 +18,7 @@ use SocialiteProviders\Zenit\rfc6749\GrantAuthorizationCodeContract;
 use SocialiteProviders\Zenit\rfc6749\GrantClientCredentialsContract;
 use SocialiteProviders\Zenit\rfc6749\GrantPasswordContract;
 use SocialiteProviders\Zenit\rfc6749\GrantRefreshContract;
+use SocialiteProviders\Zenit\rfc7592\ClientManageContract;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 use SocialiteProviders\Zenit\rfc7662\TokenIntrospectionInterface;
 
@@ -26,7 +27,8 @@ class ZenitProvider extends AbstractProvider implements
     GrantClientCredentialsContract,
     GrantPasswordContract,
     GrantRefreshContract,
-    TokenIntrospectionInterface
+    TokenIntrospectionInterface,
+    ClientManageContract
 {
     /**
      * Unique Provider Identifier.
@@ -35,7 +37,14 @@ class ZenitProvider extends AbstractProvider implements
 
     public static function additionalConfigKeys(): array
     {
-        return ['base_uri'];
+        return [
+            'base_uri',
+            'auth_endpoint',
+            'token_endpoint',
+            'user_endpoint',
+            'token_introspect_endpoint',
+            'client_manage_endpoint',
+        ];
     }
 
     protected function getBaseUri(): string
@@ -54,7 +63,7 @@ class ZenitProvider extends AbstractProvider implements
     protected function getAuthUrl($state): string
     {
         return $this->buildAuthUrlFromBase(
-            $this->buildPath('auth'),
+            $this->buildPath($this->getConfig('auth_endpoint', 'auth')),
             $state
         );
     }
@@ -64,7 +73,7 @@ class ZenitProvider extends AbstractProvider implements
      */
     protected function getTokenUrl(): string
     {
-        return $this->buildPath('oauth/token');
+        return $this->buildPath($this->getConfig('token_endpoint', 'oauth/token'));
     }
 
     /**
@@ -73,14 +82,12 @@ class ZenitProvider extends AbstractProvider implements
     protected function getUserByToken($token)
     {
         $response = $this->getHttpClient()->get(
-            $this->buildPath('api/user'),
-            [
-                RequestOptions::HEADERS => [
-                    'Accept'        => 'application/json',
-                    'Authorization' => 'Bearer '.$token,
-                ],
+            $this->buildPath($this->getConfig('user_endpoint', 'api/user')), [
+            RequestOptions::HEADERS => [
+                'Accept'        => 'application/json',
+                'Authorization' => 'Bearer '.$token,
             ]
-        );
+        ]);
 
         return json_decode($response->getBody()->getContents(), true);
     }
@@ -162,19 +169,17 @@ class ZenitProvider extends AbstractProvider implements
     public function introspectToken(string $token): IntrospectedTokenInterface
     {
         try {
-
             $response = $this->getHttpClient()->post(
-                $this->buildPath('token_info'),
-                [
-                    RequestOptions::HEADERS     => [
-                        'Accept' => 'application/json'
-                    ],
-                    RequestOptions::FORM_PARAMS => [
-                        'client_id'     => $this->clientId,
-                        'client_secret' => $this->clientSecret,
-                        'token'         => $token
-                    ],
-                ]);
+                $this->buildPath($this->getConfig('token_introspect_endpoint', 'token_info')), [
+                RequestOptions::HEADERS     => [
+                    'Accept' => 'application/json'
+                ],
+                RequestOptions::FORM_PARAMS => [
+                    'client_id'     => $this->clientId,
+                    'client_secret' => $this->clientSecret,
+                    'token'         => $token
+                ],
+            ]);
 
             $response = json_decode($response->getBody()->getContents(), true);
 
@@ -234,13 +239,12 @@ class ZenitProvider extends AbstractProvider implements
 
         try {
             $response = $this->getHttpClient()->post(
-                $this->getTokenUrl(),
-                [
-                    RequestOptions::HEADERS     => [
-                        'Accept' => 'application/json'
-                    ],
-                    RequestOptions::FORM_PARAMS => $request,
-                ]);
+                $this->getTokenUrl(), [
+                RequestOptions::HEADERS     => [
+                    'Accept' => 'application/json'
+                ],
+                RequestOptions::FORM_PARAMS => $request,
+            ]);
 
             $response = json_decode($response->getBody()->getContents(), true);
 
@@ -296,5 +300,50 @@ class ZenitProvider extends AbstractProvider implements
             'code'         => $code,
             'redirect_uri' => $redirect_uri
         ]);
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function getClientConfiguration(): array
+    {
+        try {
+            $response = $this->getHttpClient()->get(
+                $this->buildPath($this->getConfig('client_manage_endpoint', 'oauth/client')), [
+                RequestOptions::HEADERS => [
+                    'Accept'        => 'application/json',
+                    'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
+                ]
+            ]);
+
+            return json_decode($response->getBody()->getContents(), true);
+
+        } catch (ClientException $e) {
+            $this->examineTokenResponse($e);
+        }
+    }
+
+    /**
+     * @throws GuzzleException
+     * @throws OAuth2TokenException
+     */
+    public function updateClientConfiguration(array $config): array
+    {
+        try {
+            $response = $this->getHttpClient()->post(
+                $this->buildPath($this->getConfig('client_manage_endpoint', 'oauth/client')), [
+                RequestOptions::HEADERS     => [
+                    'Accept'        => 'application/json',
+                    'Authorization' => 'Basic '.base64_encode($this->clientId.':'.$this->clientSecret),
+                ],
+                RequestOptions::FORM_PARAMS => $config,
+            ]);
+
+            return json_decode($response->getBody()->getContents(), true);
+
+        } catch (ClientException $e) {
+            $this->examineTokenResponse($e);
+        }
     }
 }
