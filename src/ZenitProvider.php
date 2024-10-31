@@ -331,7 +331,7 @@ class ZenitProvider extends AbstractProvider implements
     public function updateClientConfiguration(array $config): array
     {
         try {
-            $response = $this->getHttpClient()->post(
+            $response = $this->getHttpClient()->put(
                 $this->buildPath($this->getConfig('client_manage_endpoint', 'oauth/client')), [
                 RequestOptions::HEADERS     => [
                     'Accept'        => 'application/json',
