@@ -8,6 +8,9 @@ use Laravel\Sanctum\Contracts\HasApiTokens;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException;
 
+/**
+ * @deprecated Prefer https://laravel.com/docs/11.x/sanctum#token-ability-middleware
+ */
 class ScopedToken
 {
     /**
