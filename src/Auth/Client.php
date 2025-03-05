@@ -2,10 +2,10 @@
 
 namespace SocialiteProviders\Zenit\Auth;
 
+use DateTimeInterface;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Laravel\Sanctum\Contracts\HasAbilities;
 use Laravel\Sanctum\Contracts\HasApiTokens;
-use SocialiteProviders\Zenit\IntrospectedToken;
 use SocialiteProviders\Zenit\rfc7662\IntrospectedTokenInterface;
 
 class Client implements Authenticatable, HasApiTokens
@@ -54,15 +54,15 @@ class Client implements Authenticatable, HasApiTokens
 
     public function tokens()
     {
-        return [];
+        return null;
     }
 
-    public function tokenCan(string $ability)
+    public function tokenCan(string $ability): bool
     {
         return $this->token->can($ability);
     }
 
-    public function createToken(string $name, array $abilities = ['*'], \DateTimeInterface $expiresAt = null)
+    public function createToken(string $name, array $abilities = ['*'], DateTimeInterface $expiresAt = null)
     {
         return null;
     }

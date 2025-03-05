@@ -161,7 +161,8 @@ $token = Socialite::driver('zenit')
 
 ## Manage client
 
-Package provides token introspection compliant to rfc7592.
+Package provides remote client management compliant to rfc7592. It allows to 
+read OAuth client properties...
 
 ```php
 use SocialiteProviders\Zenit\ClientConfiguration;
@@ -170,6 +171,8 @@ $config = new ClientConfiguration(
     Socialite::driver('zenit')->getClientConfiguration()
 );
 ```
+
+...and update it programmatically:
 
 ```php
 use SocialiteProviders\Zenit\ClientConfiguration;
@@ -197,10 +200,8 @@ Socialite::driver('zenit')->updateClientConfiguration($config->toUpdateArray());
 
 ## Token authorization
 
-Register auth driver, that authorizes incoming requests with bearer tokens,
-issued by some OAuth 2.0 server.
-
-Socialite provider should implement `TokenIntrospectionInterface`.
+Register auth driver, that would authorize incoming requests with bearer 
+tokens, issued by oauth server.
 
 ```php
 use SocialiteProviders\Zenit\Auth\TokenAuthorization;
@@ -229,8 +230,20 @@ Next, register driver for the guard:
 ]
 ```
 
-As access_token may not be associated with a user, the `Authenticatable`
-object is a `Client` class. It exists only during request.
+Usually, _access_token_ associated with a user, but 
+`client_credentials` _access_token_ is not. Such _access_token_ associated 
+with oauth client only. 
+
+So, the `Authenticatable` may be 
+as `App\User`, 
+as `SocialiteProviders\Zenit\Auth\Client` class. 
+
+We expect that `User` implements `Laravel\Sanctum\Contracts\HasApiTokens`, 
+as `Client` implements it too. If so, the `Authenticatable` will be injected 
+with incoming token (aka current access token).
+
+Current access token implements `Laravel\Sanctum\Contracts\HasAbilities` 
+interface, so you may inspect its scopes and abilities.
 
 ```php
 use Illuminate\Http\Request;
@@ -239,19 +252,19 @@ use Laravel\Sanctum\Contracts\HasApiTokens;
 public function index(Request $request) {
     $authenticated = $request->user();
     
-    if ($authenticated instanceof HasApiTokens) {
-        // Check scope
-        $authenticated->currentAccessToken()->scope();
-    }
+    // Check scope
+    $authenticated->currentAccessToken()->can('my-scope');
 }
 ```
 
-Other hand, you may use the `ScopedToken` middleware to inspect token scopes:
+As current access token looks and behave like `Sanctum` token, we may 
+protect routes with `Laravel\Sanctum\Http\Middleware\CheckAbilities` or 
+`Laravel\Sanctum\Http\Middleware\CheckForAnyAbility` middlewares, as 
+described in 
+[official documentation](https://laravel.com/docs/12.x/sanctum#token-ability-middleware).
 
 ```php
-use Illuminate\Support\Facades\Route;
-use SocialiteProviders\Zenit\Middlewares\ScopedToken;
-
-Route::get('example', 'ctl')
-    ->middleware([ScopedToken::class.':my-scope,foo,bar'])
+Route::get('/orders', function () {
+    // Token has both "check-status" and "place-orders" abilities...
+})->middleware(['auth:api', 'abilities:check-status,place-orders']);
 ```

@@ -5,7 +5,6 @@ namespace SocialiteProviders\Zenit\Auth;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
-use Laravel\Sanctum\Contracts\HasApiTokens;
 use Laravel\Socialite\Facades\Socialite;
 use Psr\SimpleCache\CacheInterface;
 use SocialiteProviders\Zenit\IntrospectedToken;
@@ -49,7 +48,7 @@ class TokenAuthorization
                     $authenticated = new Client($introspected);
                 }
 
-                if ($authenticated instanceof HasApiTokens) {
+                if (method_exists($authenticated, 'withAccessToken')) {
                     $authenticated->withAccessToken($introspected);
                 }
             }
