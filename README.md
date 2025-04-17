@@ -203,15 +203,26 @@ Socialite::driver('zenit')->updateClientConfiguration($config->toUpdateArray());
 Register auth driver, that would authorize incoming requests with bearer 
 tokens, issued by oauth server.
 
+Provide a cache instance to store introspected tokens.
+
+You may pass a callback to make additional checks with an authenticated user.
+
 ```php
 use SocialiteProviders\Zenit\Auth\TokenAuthorization;
 use Laravel\Socialite\Facades\Socialite;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 Auth::viaRequest('access_token', new TokenAuthorization(
-    socialiteProvider: 'zenit', 
-    userProvider: Auth::createUserProvider(config('auth.guards.api.provider')),
-    cache: cache()->driver()
+    'zenit', 
+    Auth::createUserProvider(config('auth.guards.api.provider')),
+    cache()->driver(),
+    function(Authenticatable $user) {
+        if ($user->trashed()) {
+            throw new AccessDeniedHttpException('Account is disabled');
+        }
+    }
 ));
 ```
 
@@ -250,10 +261,8 @@ use Illuminate\Http\Request;
 use Laravel\Sanctum\Contracts\HasApiTokens;
 
 public function index(Request $request) {
-    $authenticated = $request->user();
-    
     // Check scope
-    $authenticated->currentAccessToken()->can('my-scope');
+    $request->user()->tokenCan('my-scope');
 }
 ```
 

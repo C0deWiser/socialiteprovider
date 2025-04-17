@@ -108,16 +108,6 @@ class ZenitProvider extends AbstractProvider implements
 
     /**
      * {@inheritdoc}
-     */
-    protected function getTokenFields($code): array
-    {
-        return array_merge(parent::getTokenFields($code), [
-            'grant_type' => 'authorization_code',
-        ]);
-    }
-
-    /**
-     * {@inheritdoc}
      *
      * @throws OAuth2Exception
      * @throws GuzzleException
@@ -141,16 +131,9 @@ class ZenitProvider extends AbstractProvider implements
         return $this->user;
     }
 
-    /**
-     * @param  string|AccessToken  $token
-     *
-     * @return \Laravel\Socialite\Two\User|User
-     */
     public function userFromToken($token)
     {
-        $user = $this->mapUserToObject($this->getUserByToken($token));
-
-        $user->setToken($token);
+        $user =  parent::userFromToken($token);
 
         if ($token instanceof AccessToken) {
             $user
