@@ -17,7 +17,7 @@ use Illuminate\Support\Collection;
  *
  * @property string $name
  * @property string $namespace
- * @property Collection<ClientScope> $scopes
+ * @property Collection<integer, ClientScope> $scopes
  * @property-write string $redirect_uri
  */
 class ClientConfiguration extends Pivot
