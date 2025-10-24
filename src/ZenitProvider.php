@@ -35,6 +35,8 @@ class ZenitProvider extends AbstractProvider implements
      */
     public const IDENTIFIER = 'ZENIT';
 
+    protected $scopeSeparator = ' ';
+
     public static function additionalConfigKeys(): array
     {
         return [
